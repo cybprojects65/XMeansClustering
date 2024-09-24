@@ -143,7 +143,6 @@ public class XmeansFeatureClustering {
 		System.out.println("Rapid Miner initialized");
 
 		
-		//File featureOutputFolder = new File("C:/Users/Pasquale/eclipse-workspace/XMeansClustering/xmeans_clusters/");
 		if (!featureOutputFolder.exists())
 			featureOutputFolder.mkdir();
 
