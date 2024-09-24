@@ -22,6 +22,7 @@ public class XmeansFeatureClustering {
 	public static void main(String[] args) throws Exception {
 
 		File inputFile = null; 
+		File featureOutputFolder = null; 
 		List<String> columnsToTake = new ArrayList<>();
 		int minElementsInCluster;
 		int minClusters;
@@ -37,21 +38,34 @@ public class XmeansFeatureClustering {
 			minClusters = Integer.parseInt(args[2]);
 			maxClusters = Integer.parseInt(args[3]);
 			maxIterations = Integer.parseInt(args[4]);
+			featureOutputFolder = new File(args[5]);
 			
-			for(int i=5;i<args.length;i++)
+			for(int i=6;i<args.length;i++)
 				columnsToTake.add(args[i]);
 			
 			
 		}else {
 			
-			inputFile = new File("./dataset_mediterranean_sea_2017_2018_2019_2020_2021.csv");
-			columnsToTake.add("environment 2017_net_primary_production");
-			columnsToTake.add("environment 2017_sea-bottom_dissolved_oxygen");
+			//inputFile = new File("./dataset_mediterranean_sea_2017_2018_2019_2020_2021.csv");
+			inputFile = new File("./Mediterranean_Sea_colonne_complete_STD.csv");
+			
+			//columnsToTake.add("environment 2017_net_primary_production");
+			//columnsToTake.add("environment 2017_sea-bottom_dissolved_oxygen");
+			//column to take for Mediterranean_Sea_colonne_complete_STD
+			columnsToTake.add("environment.2021_land_distance");
+			columnsToTake.add("environment.2021_mean_depth");
+			columnsToTake.add("environment.2021_net_primary_production"); 
+			columnsToTake.add("environment.2021_sea.bottom_dissolved_oxygen");
+			columnsToTake.add("fishing.activity.2021_total_fishing");
+			columnsToTake.add("species.richness.2021");
+			columnsToTake.add("stocks.richness.2021");
+			columnsToTake.add("thermohalinity_2021");
 			
 			minElementsInCluster = 2;
-			minClusters = 3;
-			maxClusters = 16;
+			minClusters = 2;
+			maxClusters = 50;
 			maxIterations = 100;
+			featureOutputFolder = new File("./xmeans_clusters/");
 			
 		}
 		
@@ -75,7 +89,7 @@ public class XmeansFeatureClustering {
 
 		System.out.println("Building matrix..");
 		double[][] featureMatrix = new double[ncells][validIdxs.size()];
-		int lineIndex = 1;
+		int lineIndex = 1;     
 		int nfeatures = featureMatrix[0].length;
 
 		for (int i = 0; i < featureMatrix.length; i++) {
@@ -128,7 +142,8 @@ public class XmeansFeatureClustering {
 		//RapidMiner.init();
 		System.out.println("Rapid Miner initialized");
 
-		File featureOutputFolder = new File("./xmeans_clusters/");
+		
+		//File featureOutputFolder = new File("C:/Users/Pasquale/eclipse-workspace/XMeansClustering/xmeans_clusters/");
 		if (!featureOutputFolder.exists())
 			featureOutputFolder.mkdir();
 
@@ -217,7 +232,7 @@ public class XmeansFeatureClustering {
 		List<Double[]> clusteredtable = new ArrayList<Double[]>();
 		HashMap<Integer, List<Double[]>> clustersWithPoints = new HashMap<Integer, List<Double[]>>();
 
-		for (int clustidx = 1; clustidx < featureMatrix.length; clustidx++) {
+		for (int clustidx = 1; clustidx < featureMatrix.length +1; clustidx++) {
 
 			String clusteringLine = clusteredFeatures.get(clustidx);
 			String clusteringLineElements[] = clusteringLine.split(",");
@@ -239,17 +254,25 @@ public class XmeansFeatureClustering {
 			clustersWithPoints.put(clusterId, pointlist);
 
 			Double[] rowcomplete = new Double[allFeatureMatrix[0].length + 1];
-			for (int k = 0; k < allFeatureMatrix[0].length; k++) {
+			for (int k = 0; k < allFeatureMatrix[0].length; k++) { 
 				rowcomplete[k] = allFeatureMatrix[featureIdx][k];
 			}
 			rowcomplete[allFeatureMatrix[0].length] = (double) clusterId;
 
 			clusteredtable.add(rowcomplete);
+			
 		}
 		BufferedWriter bw = new BufferedWriter(new FileWriter(outputClusteredTable));
+		
+		
+		
+		System.out.println("righe matrice clustertable "+clusteredtable.size()+"\n");
 
 		bw.write("longitude,latitude," + headerString.toString() + "clusterid\n");
+		
+		int yy=0;
 		for (Double[] row : clusteredtable) {
+			yy++;
 			int c = 0;
 			for (Double r : row) {
 				bw.write("" + r);
@@ -285,8 +308,9 @@ public class XmeansFeatureClustering {
 
 		bw = new BufferedWriter(new FileWriter(outputClusterStatsTable));
 		bw.append("clusterid," + headerString.toString().substring(0, headerString.toString().length() - 1) + "\n");
-
+		
 		for (double[] row : clusterMeans) {
+			
 			int c = 0;
 			for (double r : row) {
 				bw.write("" + r);
@@ -298,7 +322,7 @@ public class XmeansFeatureClustering {
 			}
 		}
 		bw.close();
-		System.out.println("Done.");
+		System.out.println("Done."+yy);
 
 	}
 
